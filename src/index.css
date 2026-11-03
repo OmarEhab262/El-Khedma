@@ -47,29 +47,17 @@ body {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
-/* =========================================
-   CALENDAR HEADER
-   ========================================= */
-
 .react-datepicker__header {
   background: #0891b2 !important;
   color: white;
   border-bottom: none;
 }
 
-/* =========================================
-   MONTH TEXT
-   ========================================= */
-
 .react-datepicker__current-month {
   color: white;
   font-size: 18px;
   font-weight: bold;
 }
-
-/* =========================================
-   DAYS
-   ========================================= */
 
 .react-datepicker__day {
   border-radius: 10px;
@@ -82,18 +70,10 @@ body {
   color: white;
 }
 
-/* =========================================
-   SELECTED DAY
-   ========================================= */
-
 .react-datepicker__day--selected {
   background: #0e7490 !important;
   color: white !important;
 }
-
-/* =========================================
-   TODAY
-   ========================================= */
 
 .react-datepicker__day--today {
   font-weight: bold;
@@ -101,21 +81,19 @@ body {
 }
 
 /* =========================================
-   NORMAL PRINT
+   A4 LANDSCAPE PAGES (SHARED)
+   المساحة المتاحة = 297 - 10 = 287mm  ×  210 - 10 = 200mm
    ========================================= */
 
 .print-a4-page {
   display: none;
 }
 
-/* =========================================
-   PDF
-   ========================================= */
-
 .pdf-wrapper {
   display: none;
 }
 
+.print-a4-page,
 .pdf-a4-page {
   width: 287mm;
   height: 200mm;
@@ -127,18 +105,34 @@ body {
 
   background: white;
 
-  display: flex;
   flex-direction: column;
-
   justify-content: center;
   align-items: center;
 
   overflow: hidden;
 }
 
+.pdf-a4-page {
+  display: flex;
+}
+
+.print-table-box,
 .pdf-table-box {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
   overflow: hidden;
+  box-sizing: border-box;
+  background: white;
+}
+
+.fit-inner {
+  width: 100%;
 }
 
 /* =========================================
@@ -150,7 +144,9 @@ body {
   justify-content: center;
   align-items: center;
 
-  margin-top: 18px;
+  flex-shrink: 0;
+
+  margin-top: 6px;
 }
 
 .copyright-box {
@@ -190,10 +186,6 @@ body {
     box-shadow 0.35s ease;
 }
 
-/* =========================================
-   OE
-   ========================================= */
-
 .copyright-short {
   display: flex;
   align-items: center;
@@ -203,10 +195,6 @@ body {
     opacity 0.2s ease,
     transform 0.3s ease;
 }
-
-/* =========================================
-   FULL COPYRIGHT
-   ========================================= */
 
 .copyright-full {
   position: absolute;
@@ -242,10 +230,6 @@ body {
   color: #93c5fd;
   font-size: 10px;
 }
-
-/* =========================================
-   HOVER
-   ========================================= */
 
 .copyright-box:hover {
   min-width: 255px;
@@ -307,7 +291,7 @@ body {
   html,
   body {
     width: 100%;
-    height: 100%;
+    height: auto;
 
     margin: 0;
     padding: 0;
@@ -315,53 +299,51 @@ body {
     background: white;
   }
 
-  /* =======================================
-     SCREEN
-     ======================================= */
-
   .screen-content {
     display: none !important;
   }
 
+  .print-wrapper,
+  .pdf-wrapper {
+    margin: 0;
+    padding: 0;
+  }
+
   /* =======================================
      NORMAL PRINT
-     pageCount controls pages
+     كل نسخة = صفحة كاملة
      ======================================= */
 
   body:not(.pdf-mode) .print-a4-page {
     display: flex !important;
 
-    width: 260mm;
+    width: 287mm;
     height: 200mm;
+    max-height: 200mm;
 
-    padding: 2mm;
+    margin: 0;
+    padding: 1mm;
 
     box-sizing: border-box;
-
-    margin: auto;
 
     background: white;
 
     position: relative;
 
-    page-break-after: avoid;
-    break-after: avoid;
-  }
-
-  body:not(.pdf-mode) .print-table-box {
-    width: 100%;
-    height: 100%;
-
     overflow: hidden;
 
-    display: flex;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 
-    justify-content: center;
-    align-items: center;
+  body:not(.pdf-mode) .print-a4-page:not(:last-child) {
+    break-after: page;
+    page-break-after: always;
+  }
 
-    box-sizing: border-box;
-
-    background: white;
+  body:not(.pdf-mode) .print-a4-page:last-child {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 
   body:not(.pdf-mode) .pdf-wrapper {
@@ -370,7 +352,7 @@ body {
 
   /* =======================================
      PDF MODE
-     ONE COPY ONLY
+     نسخة واحدة فقط
      ======================================= */
 
   body.pdf-mode {
@@ -399,11 +381,10 @@ body {
 
     overflow: hidden !important;
 
-    page-break-before: avoid !important;
-    page-break-after: avoid !important;
-
     break-before: avoid !important;
     break-after: avoid !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
   }
 
   body.pdf-mode .pdf-a4-page {
@@ -411,31 +392,19 @@ body {
 
     width: 287mm;
     height: 200mm;
+    max-height: 200mm;
 
     margin: 0;
-    padding: 0;
+    padding: 1mm;
 
     box-sizing: border-box;
 
-    flex-direction: column;
-
-    justify-content: center;
-    align-items: center;
-
     overflow: hidden !important;
-
-    page-break-before: avoid !important;
-    page-break-after: avoid !important;
 
     break-before: avoid !important;
     break-after: avoid !important;
-  }
-
-  body.pdf-mode .pdf-table-box {
-    width: 100%;
-    max-width: 100%;
-
-    overflow: hidden !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
   }
 
   /* =======================================
@@ -459,6 +428,11 @@ body {
     animation: none !important;
   }
 }
+
+/* =========================================
+   DATEPICKER
+   ========================================= */
+
 #datepicker-portal {
   position: relative;
   z-index: 999999;
@@ -475,13 +449,12 @@ body {
 .react-datepicker {
   z-index: 999999 !important;
 }
-@media print {
-  html,
-  body {
-    background: #fff !important;
-    color: #000 !important;
-  }
 
+/* =========================================
+   REPORT PAGE (PagePeople)
+   ========================================= */
+
+@media print {
   .print-controls {
     display: none !important;
   }

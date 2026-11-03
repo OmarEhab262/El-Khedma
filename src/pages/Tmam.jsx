@@ -13,6 +13,7 @@ import {
   PersonOff,
   Lock,
   Save,
+  Description,
 } from "@mui/icons-material";
 
 import {
@@ -24,14 +25,14 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import ButtonsTmam from "../components/ButtonsTmam";
 
 const Tmam = () => {
+  const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
-
+  const [isSaved, setIsSaved] = useState(false);
   const unitName = localStorage.getItem("unitName");
 
   const tmam = JSON.parse(localStorage.getItem("tmam") || "{}");
@@ -565,8 +566,9 @@ const Tmam = () => {
         برا: outsidePeople,
         موجود: insidePeople,
       };
-
       localStorage.setItem("people", JSON.stringify(people));
+
+      setIsSaved(true);
 
       toast.success(
         `تم حفظ التمام بنجاح — القوة ${actualTotalCount} — الخارج ${actualOutsideCount} — الموجود ${actualInsideCount}`,
@@ -908,54 +910,98 @@ const Tmam = () => {
                 </p>
               )}
             </div>
-
-            <Button
-              variant="contained"
-              onClick={handleSavePeople}
-              disabled={isSaving || !isTmamValid}
-              startIcon={
-                <Save
-                  sx={{
-                    fontSize: 22,
-                    ml: 1,
-                  }}
-                />
-              }
-              sx={{
-                direction: "rtl",
-                minWidth: {
-                  xs: "100%",
-                  sm: 220,
-                },
-                py: 1.6,
-                px: 4,
-                mt: 5,
-                borderRadius: "16px",
-                fontWeight: "900",
-                fontSize: "16px",
-                background: isTmamValid
-                  ? "linear-gradient(135deg, #06b6d4, #2563eb)"
-                  : "rgba(100,116,139,0.4)",
-                color: "#fff",
-                "&:hover": {
+            <div className="flex flex-wrap gap-4 items-center">
+              <Button
+                variant="contained"
+                onClick={handleSavePeople}
+                disabled={isSaving || !isTmamValid}
+                startIcon={
+                  <Save
+                    sx={{
+                      fontSize: 22,
+                      ml: 1,
+                    }}
+                  />
+                }
+                sx={{
+                  direction: "rtl",
+                  minWidth: {
+                    xs: "100%",
+                    sm: 220,
+                  },
+                  py: 1.6,
+                  px: 4,
+                  mt: 5,
+                  borderRadius: "16px",
+                  fontWeight: "900",
+                  fontSize: "16px",
                   background: isTmamValid
-                    ? "linear-gradient(135deg, #0891b2, #1d4ed8)"
+                    ? "linear-gradient(135deg, #06b6d4, #2563eb)"
                     : "rgba(100,116,139,0.4)",
-                },
-                "&.Mui-disabled": {
-                  color: "rgba(255,255,255,0.45)",
-                  background: "rgba(100,116,139,0.25)",
-                },
-                "& .MuiButton-startIcon": {
-                  marginLeft: "10px",
-                  marginRight: 0,
-                },
-              }}
-            >
-              {isSaving ? "جاري الحفظ..." : "حفظ التمام"}
-            </Button>
-          </div>
+                  color: "#fff",
+                  "&:hover": {
+                    background: isTmamValid
+                      ? "linear-gradient(135deg, #0891b2, #1d4ed8)"
+                      : "rgba(100,116,139,0.4)",
+                  },
+                  "&.Mui-disabled": {
+                    color: "rgba(255,255,255,0.45)",
+                    background: "rgba(100,116,139,0.25)",
+                  },
+                  "& .MuiButton-startIcon": {
+                    marginLeft: "10px",
+                    marginRight: 0,
+                  },
+                }}
+              >
+                {" "}
+                {isSaving ? "جاري الحفظ..." : "حفظ التمام"}
+              </Button>
 
+              {isSaved && isTmamValid && (
+                <Button
+                  variant="contained"
+                  onClick={() => navigate("/people")}
+                  startIcon={
+                    <Description
+                      sx={{
+                        fontSize: 22,
+                        ml: 1,
+                      }}
+                    />
+                  }
+                  sx={{
+                    direction: "rtl",
+                    minWidth: {
+                      xs: "100%",
+                      sm: 220,
+                    },
+                    py: 1.6,
+                    px: 4,
+                    mt: 5,
+                    mr: {
+                      xs: 0,
+                      sm: 2,
+                    },
+                    borderRadius: "16px",
+                    fontWeight: "900",
+                    fontSize: "16px",
+                    background: "linear-gradient(135deg, #7c3aed, #8b5cf6)",
+                    color: "#fff",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #6d28d9, #7c3aed)",
+                    },
+                    "& .MuiButton-startIcon": {
+                      marginLeft: "10px",
+                      marginRight: 0,
+                    },
+                  }}
+                >
+                  عرض التقرير
+                </Button>
+              )}
+            </div>
+          </div>
           {/* =====================================================
               تمام الضباط
           ===================================================== */}

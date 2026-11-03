@@ -40,7 +40,7 @@ const PageVacations = () => {
     to: null,
   });
 
-  const vacationTypes = ["ميدانية", "عارضة", "سنوية", "مرضية"];
+  const vacationTypes = ["ميدانية", "راحة", "سنوية", "مرضية"];
 
   const rankOrder = [
     "لواء أح",

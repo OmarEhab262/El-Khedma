@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { HashRouter, Routes, Route, useLocation } from "react-router-dom";
 
 import { Toaster } from "react-hot-toast";
 
@@ -127,7 +127,7 @@ function AppContent() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Toaster
         position="top-center"
         toastOptions={{
@@ -143,6 +143,6 @@ export default function App() {
       />
 
       <AppContent />
-    </BrowserRouter>
+    </HashRouter>
   );
 }

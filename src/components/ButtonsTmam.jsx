@@ -139,7 +139,7 @@ const ButtonsTmam = () => {
 
   return (
     <div className="mt-6">
-      <Button
+      {/* <Button
         component={Link}
         to="/people"
         dir="rtl"
@@ -188,7 +188,7 @@ const ButtonsTmam = () => {
         />
 
         <span>مشاهدة التمام</span>
-      </Button>
+      </Button> */}
       {/* Main Button */}
       <Button
         onClick={() => setOpen((prev) => !prev)}

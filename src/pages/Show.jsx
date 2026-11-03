@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Button,
@@ -11,15 +11,10 @@ import {
 
 import Tables from "../components/Tables";
 
-import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
-
 import CopyrightOutlinedIcon from "@mui/icons-material/CopyrightOutlined";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-
 import PrintIcon from "@mui/icons-material/Print";
-
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-
 import DescriptionIcon from "@mui/icons-material/Description";
 
 import toast from "react-hot-toast";
@@ -37,8 +32,62 @@ export default function Show() {
   const [pageInput, setPageInput] = useState("1");
 
   // =========================
+  // FIT TABLE INSIDE ONE PAGE
+  // =========================
+
+  const fitToOnePage = () => {
+    document
+      .querySelectorAll(".print-a4-page, .pdf-a4-page")
+      .forEach((page) => {
+        const box = page.querySelector(".print-table-box, .pdf-table-box");
+        const inner = box?.querySelector(".fit-inner");
+
+        if (!box || !inner) return;
+
+        const previousStyle = page.getAttribute("style") || "";
+
+        // إظهار الصفحة مؤقتًا خارج الشاشة لقياسها
+        page.style.cssText +=
+          ";display:flex !important;visibility:hidden !important;position:absolute !important;left:-9999px;top:0;";
+
+        inner.style.zoom = "1";
+
+        const availableWidth = box.clientWidth;
+        const availableHeight = box.clientHeight;
+        const contentWidth = inner.scrollWidth;
+        const contentHeight = inner.scrollHeight;
+
+        if (
+          availableWidth > 0 &&
+          availableHeight > 0 &&
+          contentWidth > 0 &&
+          contentHeight > 0
+        ) {
+          const scale = Math.min(
+            availableWidth / contentWidth,
+            availableHeight / contentHeight,
+            1,
+          );
+
+          inner.style.zoom = scale < 1 ? String(scale * 0.98) : "1";
+        }
+
+        page.setAttribute("style", previousStyle);
+      });
+  };
+
+  useEffect(() => {
+    window.addEventListener("beforeprint", fitToOnePage);
+
+    return () => {
+      window.removeEventListener("beforeprint", fitToOnePage);
+    };
+  }, [pageCount]);
+
+  // =========================
   // PDF
   // =========================
+
   const handleSavePdf = () => {
     document.body.classList.add("pdf-mode");
 
@@ -49,6 +98,7 @@ export default function Show() {
 
     window.addEventListener("afterprint", cleanup);
 
+    fitToOnePage();
     window.print();
   };
 
@@ -66,6 +116,7 @@ export default function Show() {
 
     window.addEventListener("afterprint", cleanup);
 
+    fitToOnePage();
     window.print();
   };
 
@@ -227,11 +278,17 @@ export default function Show() {
         </div>
       </div>
 
+      {/* =========================
+          NORMAL PRINT
+      ========================= */}
+
       <div className="print-wrapper">
         {Array.from({ length: pageCount }).map((_, index) => (
-          <div className="print-a4-page flex flex-col" key={index}>
+          <div className="print-a4-page" key={index}>
             <div className="print-table-box">
-              <Tables />
+              <div className="fit-inner">
+                <Tables />
+              </div>
             </div>
 
             <Copyright />
@@ -247,11 +304,15 @@ export default function Show() {
       <div className="pdf-wrapper">
         <div className="pdf-a4-page">
           <div className="pdf-table-box">
-            <Tables />
+            <div className="fit-inner">
+              <Tables />
+            </div>
           </div>
+
           <Copyright />
         </div>
       </div>
+
       <Dialog
         open={pageDialogOpen}
         onClose={() => setPageDialogOpen(false)}

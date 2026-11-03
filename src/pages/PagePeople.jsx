@@ -158,11 +158,63 @@ function sortPeople(people) {
 /* =========================================================
    STATUS HELPERS
 ========================================================= */
+const STATUS_ALIASES = {
+  mission: ["mission", "missions", "مأمورية", "ماموريه"],
+  hospital: ["hospital", "مستشفى"],
+  absence: ["absence", "غياب"],
+  sickLeave: ["sickleave", "sick", "اجازهمرضيه", "مرضي"],
+  vacation: ["vacation", "vacations", "leave", "holiday", "اجازه", "اجازات"],
+  band: ["band", "فرقه", "فرق"],
+  outCenter: ["outcenter", "خارجالتمركز"],
+  outCountry: ["outcountry", "خارجالبلاد"],
+  prison: ["prison", "سجن"],
+};
+
+const STATUS_TYPES_LIST = Object.keys(STATUS_ALIASES);
+
+function cleanKey(value) {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/[\s_\-]/g, "");
+}
+
+function normalizeStatusType(raw) {
+  const key = cleanKey(raw);
+  if (!key) return "";
+
+  for (const [type, aliases] of Object.entries(STATUS_ALIASES)) {
+    if (aliases.some((alias) => cleanKey(alias) === key)) return type;
+  }
+
+  // sick leave must be checked before vacation
+  if (key.includes("مرض") || key.includes("sick")) return "sickLeave";
+  if (key.includes("اجاز") || key.includes("vacation") || key.includes("leave"))
+    return "vacation";
+
+  return key;
+}
 
 function getStatusType(status) {
-  return (
-    status?.type || status?.statusType || status?.kind || status?.category || ""
-  );
+  const candidates = [
+    status?.label,
+    status?.type,
+    status?.statusType,
+    status?.kind,
+    status?.category,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeStatusType(candidate);
+
+    if (STATUS_TYPES_LIST.includes(normalized)) {
+      return normalized;
+    }
+  }
+
+  return "";
 }
 
 function getStatusFrom(status) {
@@ -207,7 +259,7 @@ function getStatusTitle(type) {
     hospital: "المستشفى",
     absence: "الغياب",
     sickLeave: "الإجازات المرضية الحالية",
-    vacation: "الإجازات",
+    vacation: "اجازة",
     band: "الفرق",
     outCenter: "خارج التمركز",
     outCountry: "خارج البلاد",
@@ -541,7 +593,7 @@ function getStatusField(status, type, key) {
     case "sickLeave":
     case "vacation":
       if (key === "reason") {
-        return getStatusValue(status, [
+        const reasonValue = getStatusValue(status, [
           "reason",
           "vacationReason",
           "leaveReason",
@@ -550,6 +602,19 @@ function getStatusField(status, type, key) {
           "سبب",
           "سبب_الإجازة",
         ]);
+
+        if (reasonValue !== "-") {
+          return reasonValue;
+        }
+
+        // نوع الإجازة محفوظ في type (مثل: ميدانية)
+        const rawType = status?.type;
+
+        if (rawType && normalizeStatusType(rawType) !== type) {
+          return rawType;
+        }
+
+        return "-";
       }
 
       if (key === "notes") {
@@ -916,8 +981,9 @@ function PersonCells({ person, number, days, onDaysChange }) {
 
       <td className="green-cell rank-cell">{person.rank || "-"}</td>
 
-      <td className="green-cell name-cell">{person.name || "-"}</td>
-
+      <td className="green-cell name-cell" title={person.name || ""}>
+        {person.name || "-"}
+      </td>
       <td className="days-cell">
         <div className="days-control">
           <input
@@ -1073,31 +1139,187 @@ function OutsideStatusTable({ title, type, people, rankLabel = "الرتبة" })
    OUTSIDE CATEGORY
 ========================================================= */
 
-function OutsideCategory({ title, people }) {
-  const statusTypes = [
-    "mission",
-    "hospital",
-    "absence",
-    "sickLeave",
-    "vacation",
-    "band",
-    "outCenter",
-    "outCountry",
-    "prison",
-  ];
+const STATUS_TYPES = [
+  "mission",
+  "hospital",
+  "absence",
+  "sickLeave",
+  "vacation",
+  "band",
+  "outCenter",
+  "outCountry",
+  "prison",
+];
+
+function getStatusDetails(status, type) {
+  const keysByType = {
+    mission: ["missionPlace", "missionOrder"],
+    hospital: ["hospital", "diagnosis"],
+    absence: ["absenceType"],
+    sickLeave: ["reason"],
+    vacation: ["reason"],
+    band: ["bandName", "bandPlace"],
+    outCenter: ["center", "reason"],
+    outCountry: ["country", "reason"],
+    prison: ["judgmentType"],
+  };
+
+  const parts = (keysByType[type] || [])
+    .map((key) => getStatusField(status, type, key))
+    .filter((value) => value && value !== "-");
+
+  return parts.length ? parts.join(" - ") : "-";
+}
+
+function getStatusNotes(status) {
+  return getStatusValue(status, ["notes", "note", "remarks", "ملاحظات"]);
+}
+
+function DateText({ value }) {
+  if (!value || value === "-") return <span>-</span>;
+
+  const parts = String(value).split("/");
+
+  if (parts.length !== 3) return <span>{value}</span>;
+
+  return (
+    <span
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        direction: "rtl",
+        justifyContent: "center",
+        alignItems: "center",
+        width: "100%",
+        whiteSpace: "nowrap",
+        unicodeBidi: "isolate",
+      }}
+    >
+      <span>{parts[0]}</span>
+      <span>/</span>
+      <span>{parts[1]}</span>
+      <span>/</span>
+      <span>{parts[2]}</span>
+    </span>
+  );
+}
+function OutsideTripleCells({ data, number }) {
+  if (!data) {
+    return (
+      <>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+      </>
+    );
+  }
+
+  const { person, status, type } = data;
+
+  const details = getStatusDetails(status, type);
+  const notes = getStatusNotes(status);
 
   return (
     <>
-      {statusTypes.map((type) => (
-        <OutsideStatusTable
-          key={`${title}-${type}`}
-          title={`${getStatusTitle(type)} من ${title}`}
-          type={type}
-          people={people}
-        />
-      ))}
+      <td className="cell-number">{toArabicNumbers(number)}</td>
+      <td className="cell-rank" title={person.rank || ""}>
+        {person.rank || "-"}
+      </td>
+      <td className="cell-name" title={person.name || ""}>
+        {person.name || "-"}
+      </td>
+      <td
+        className="cell-type"
+        title={[getStatusTitle(type), details, notes]
+          .filter((value) => value && value !== "-")
+          .join(" - ")}
+      >
+        <div className="type-title">{getStatusTitle(type)}</div>
+        {details !== "-" && <div className="type-details">{details}</div>}
+        {notes !== "-" && <div className="type-details">{notes}</div>}
+      </td>
+      <td className="cell-date">
+        <DateText value={getStatusFrom(status)} />
+      </td>
+      <td className="cell-date">
+        <DateText value={getStatusTo(status)} />
+      </td>
     </>
   );
+}
+
+function OutsideCombinedTable({ title, people }) {
+  const items = STATUS_TYPES.flatMap((type) =>
+    getStatusRows(people, type).map((row) => ({ ...row, type })),
+  );
+
+  if (items.length === 0) return null;
+
+  const rows = [];
+
+  for (let index = 0; index < items.length; index += 3) {
+    rows.push([items[index], items[index + 1], items[index + 2]]);
+  }
+
+  const headerGroup = (prefix) => (
+    <>
+      <th key={`${prefix}-n`} className="col-number">
+        م
+      </th>
+      <th key={`${prefix}-r`} className="col-rank">
+        الرتبة
+      </th>
+      <th key={`${prefix}-na`} className="col-name">
+        الإسم
+      </th>
+      <th key={`${prefix}-t`} className="col-type">
+        البيان
+      </th>
+      <th key={`${prefix}-f`} className="col-date">
+        من
+      </th>
+      <th key={`${prefix}-to`} className="col-date">
+        إلى
+      </th>
+    </>
+  );
+
+  return (
+    <section className="section">
+      <h2 className="section-title">{title}</h2>
+
+      <table className="outside-status-table outside-combined-table">
+        <thead>
+          <tr>
+            {headerGroup("a")}
+            {headerGroup("b")}
+            {headerGroup("c")}
+          </tr>
+        </thead>
+
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              {row.map((data, colIndex) => (
+                <OutsideTripleCells
+                  key={colIndex}
+                  data={data}
+                  number={rowIndex * 3 + colIndex + 1}
+                />
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+function OutsideCategory({ title, people }) {
+  return <OutsideCombinedTable title={`الخارج من ${title}`} people={people} />;
 }
 
 /* =========================================================
@@ -1298,7 +1520,22 @@ export default function PagePeople() {
             Arial,
             sans-serif;
         }
+/* قص الاسم الطويل بـ ... */
+.name-cell,
+.rank-cell,
+.cell-name,
+.cell-rank {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 0;
+}
 
+.outside-combined-table .cell-name,
+.outside-combined-table .cell-rank {
+  white-space: nowrap !important;
+  word-break: normal !important;
+}
         /* =========================
            PRINT CONTROLS
         ========================= */
@@ -1325,7 +1562,7 @@ export default function PagePeople() {
            PAGE
         ========================= */
 
-        .report-page {
+                .report-page {
           font-size: 12px;
           width: 210mm;
           min-height: 297mm;
@@ -1336,6 +1573,17 @@ export default function PagePeople() {
           color: #000;
           border: 2px solid #000;
           position: relative;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .report-signature {
+          margin-top: auto;
+          align-self: flex-end;
+          width: 40%;
+          padding: 4px;
+          color: #000;
+          page-break-inside: avoid;
         }
 
         /* =========================
@@ -1350,24 +1598,70 @@ export default function PagePeople() {
 
         /* =========================
            SUMMARY
-        ========================= */
+        ========================= *//* مجموع العرض لكل مجموعة ≈ 33.3% */
+.outside-combined-table .col-number { width: 2.5%; }
+.outside-combined-table .col-rank   { width: 5.5%; }
+.outside-combined-table .col-name   { width: 7.5%; }
+.outside-combined-table .col-type   { width: 6.6%; }
+.outside-combined-table .col-date   { width: 5.75%; }
 
+.outside-combined-table th,
+.outside-combined-table td {
+  font-size: 8px;
+  padding: 2px 1px;
+}
+
+.outside-combined-table .cell-number,
+.outside-combined-table .cell-rank,
+.outside-combined-table .cell-name,
+.outside-combined-table .cell-date {
+  width: auto;
+  min-width: 0;
+  font-size: 8px !important;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.outside-combined-table .cell-date {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-size: 8.5px !important;
+  white-space: nowrap;
+  letter-spacing: 0;
+  overflow: hidden !important;
+  text-overflow: clip;
+  padding: 2px 0 !important;
+  text-align: center;
+}
+.outside-combined-table .cell-type {
+  font-size: 8px;
+  line-height: 1.15;
+  word-break: break-word;
+}
+
+.outside-combined-table .type-title {
+  font-weight: 900;
+}
+
+.outside-combined-table .type-details {
+  font-weight: 700;
+  font-size: 7.5px;
+}
         .summary-section {
           margin-top: 5px;
           margin-bottom: 5px;
           page-break-inside: avoid;
         }
-
         .summary-header {
           display: flex;
-          justify-content: center;
+          justify-content: flex-start;
           align-items: center;
         }
 
         .summary-title {
           margin: 0 0 2px;
           padding: 0;
-          text-align: center;
+          text-align: right;
           font-size: 13px;
           line-height: 1.1;
           font-weight: 900;
@@ -1413,13 +1707,12 @@ export default function PagePeople() {
         .section-title {
           margin: 0 0 2px;
           padding: 0;
-          text-align: center;
+          text-align: right;
           font-size: 13px;
           line-height: 1.1;
           font-weight: 900;
           color: #000;
         }
-
         /* =========================
            PEOPLE TABLE - 4 PEOPLE
         ========================= */
@@ -1769,9 +2062,9 @@ export default function PagePeople() {
             display: none !important;
           }
 
-          .report-page {
+                   .report-page {
             width: 100%;
-            min-height: auto;
+            min-height: 289mm;
             margin: 0;
             padding: 4mm;
             border: 2px solid #000;
@@ -2048,14 +2341,13 @@ export default function PagePeople() {
         <OutsideCategory title="الجنود" people={report.برا.soldiers} />
 
         {/* SIGNATURE */}
-
-        <div className="flex text-black flex-col w-[40%] gap-1  p-1 m-1 rounded-[5px] order-last mr-auto">
-          <p className="text-[15px]">
+        <div className="report-signature flex flex-col gap-1">
+          <p className="text-[20px]">
             {serviceData?.leader?.rank || "---"} /{" "}
             {serviceData?.leader?.name || "---"}
           </p>
 
-          <p className="text-[15px]">قائد {unitName}</p>
+          <p className="text-[20px]">قائد {unitName}</p>
 
           <div className="flex justify-between items-center w-full">
             <div className="text-[20px]">
