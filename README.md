@@ -178,15 +178,6 @@ One of the main technical challenges was turning the existing React application 
 
 I explored Pake as a desktop packaging solution and worked through the Rust build environment, Windows installer generation, application icons, and architecture requirements.
 
-The target environments include:
-
-- Windows 7 (32-bit).
-- Windows 10.
-- Windows 11.
-- Offline environments.
-
-**Important:** A successful build on a modern Windows computer does not automatically guarantee compatibility with Windows 7 or 32-bit systems. Each target environment requires testing, especially when using modern WebView technologies.
-
 ---
 
 ## 👨‍💻 Developer Notes
@@ -198,15 +189,3 @@ The target environments include:
 - Pake was explored to package the existing web application as a desktop application.
 - Desktop compatibility with older Windows systems remains an important deployment consideration.
 - The project can be extended with additional features without requiring a complete rewrite.
-
----
-
-## 👤 Author
-
-**Omar Ehab**
-
-Frontend Developer | React.js | Next.js
-
-- GitHub: https://github.com/OmarEhab262
-
-**Built during military service — from a real problem, with limited resources, continuous learning, AI-assisted development, and practical testing.**
