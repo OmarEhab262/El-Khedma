@@ -64,7 +64,7 @@ const menuItems = [
     icon: Groups,
   },
   {
-    label: "تمام الحنود",
+    label: "تمام الجنود",
     path: "/tmam/page-soldiers",
     icon: Groups,
   },

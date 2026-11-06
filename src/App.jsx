@@ -40,6 +40,8 @@ function AppContent() {
     "/",
     "/tmam",
     "/tmam/pageOffs",
+    "/tmam/page-nco",
+    "/tmam/page-soldiers",
     "/tmam/pageOtherRanks",
     "/tmam/pageVacations",
     "/tmam/pageSickLeaves",
